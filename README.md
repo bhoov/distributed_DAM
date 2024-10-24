@@ -95,3 +95,16 @@ python eval_QUANT2__kernel_ablations.py
 
 - Runs on CPU by default
 - Saves figures to `figs/QUANT2`
+
+
+## Cite this work
+
+```
+@inproceedings{
+    hoover2024dense,
+    title={Dense Associative Memory Through the Lens of Random Features},
+    author={Benjamin Hoover and Duen Horng Chau and Hendrik Strobelt and Parikshit Ram and Dmitry Krotov},
+    booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
+    year={2024},
+}
+```
