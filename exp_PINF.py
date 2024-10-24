@@ -209,7 +209,6 @@ if __name__ == "__main__":
                 im.show()
             im.save(figout_dir / f"img_{cols[i]}.png")
 
-        print(f"Figures saved to {figout_dir}")
     elif args.show_ims_by == "row":
         img_arrays = np.array(rearrange([qs0_show, kernelized_trajectory['qsout'], standard_trajectory['qsout'], qs_og_show], "s n (h w c) -> s h (n w) c", h=64, w=64, c=3))
         big_img = rearrange(img_arrays[:-1], "s h w c -> (s h) w c")
@@ -222,6 +221,8 @@ if __name__ == "__main__":
         im.save(figout_dir / f"PINF2.png")
     else:
         raise ValueError(f"show_ims_by must be 'col' or 'row', got {args.show_ims_by}")
+
+    print(f"Figures saved to {figout_dir}")
 
     #%% Save energies
     if args.plot_energies:
