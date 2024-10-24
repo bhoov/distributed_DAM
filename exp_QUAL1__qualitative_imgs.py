@@ -15,9 +15,22 @@ import pandas as pd
 import path_fixes as pf
 import os
 from pathlib import Path
+import jax_utils as ju
+from dataclasses import dataclass
+import tyro
+
+@dataclass
+class Args:
+    device: str = "0"
+
+if ju.is_interactive():
+    args = Args()
+else:
+    args = tyro.cli(Args)
+
 os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"]=".9"
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"]="false"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]=str(args.device)
 
 #%%
 if __name__ == "__main__":

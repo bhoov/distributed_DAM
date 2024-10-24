@@ -59,9 +59,9 @@ python exp_QUANT1b_opt_retrieval.py --betas 10 30 40 50 --ms 5000 40000 80000 12
 
 Once the data is generated, we analyze it for Figs 3 and 4A.
 
-**(Fig 3)**: `python eval_QUANT1b_no_retrieval+bounds.py`
+`python eval_QUANT1b_no_retrieval+bounds.py` (Fig 3)
 
-**(Fig 4A)**: `python eval_QUANT1b_retrieval.py`
+`python eval_QUANT1b_retrieval.py` (Fig 4A)
 
 - Saves figures to `figs/QUANT1b`
 
@@ -73,9 +73,12 @@ Once the data is generated, we analyze it for Figs 3 and 4A.
 python exp_QUAL1__qualitative_imgs.py
 ```
 
+- Runs on GPU 0 by default
 - Output figure saved in `figs/QUAL1`
 
 ### (Fig 5) "QUANTitative experiments across `K`" [QUANT1c]
+
+(experiment takes ~1 minute)
 
 ```
 python exp_QUANT1c.py
@@ -83,7 +86,7 @@ python exp_QUANT1c.py
 
 - Runs on GPU 1 by default
 
-**(Fig 5)**: `python eval_QUANT1c.py`
+`python eval_QUANT1c.py` (Fig 5)
 
 - Saves figures to `figs/QUANT1c`
 
