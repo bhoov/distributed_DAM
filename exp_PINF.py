@@ -1,5 +1,7 @@
 """ Plot the retrieval results from the energy dynamics """
 #%% Testing inference code
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import numpy as np
 import jax.numpy as jnp
 import jax
@@ -14,7 +16,9 @@ from PIL import Image
 import jax_utils as ju
 import tyro
 from pathlib import Path
+from dataclasses import dataclass
 
+@dataclass
 class Args:
     beta: float = 60. # Inverse temperature
     Y: int = 180_000 # Number of random features
@@ -29,11 +33,28 @@ class Args:
     n_memories: int = 4 # Number of memories
     seed: int = 42 # Random seed for selecting memories and random features
     figout_dir: str = "figs/FIG1" # Where to save the output figures
+    pick_imgs_randomly: bool = True # Whether to pick images randomly or from diverse_example_idxs
+    plot_energies: bool = True # Whether to plot the energies
+    Eto: int = 250 # Plot up to this many energy steps.
+    show_ims_by: str = "col" # "row" or "col"
+
+default_args = {
+    "fig1": (
+        "Make Figure 1",
+        Args(),
+    ),
+    "fig2": (
+        "Make Figure 2",
+        Args(figout_dir="figs/FIG2", beta=60., Y=int(2e5), n_queries=20, n_memories=20, mask_after_pct=0.6, plot_energies=False, show_ims_by="row", pick_imgs_randomly=False),
+    ),
+}
 
 if ju.is_interactive():
-    args = tyro.cli(Args)
+    args = default_args["fig1"][1] # Default for interactive
 else:
-    args = Args()
+    args = tyro.extras.overridable_config_cli(default_args)
+
+assert args.show_ims_by in ["col", "row"]
 
 import os
 os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"]=".9"
@@ -54,6 +75,7 @@ def run_inference(
     rerandomize_each_step=False,
     ):
 
+    d = qs0.shape[-1]
     only_rerandomize_phi_each_step=False # Do not rerandomize only phi each step, this is not gradient descent if you do
 
     mask_after = int(d // 2) if mask_after is None else mask_after
@@ -118,9 +140,6 @@ def run_inference(
     return standard_trajectory, kernelized_trajectory
 
 if __name__ == "__main__":
-    beta = args.beta
-    Y = args.Y
-
     figout_dir = Path(args.figout_dir)
     figout_dir.mkdir(parents=True, exist_ok=True)
 
@@ -130,28 +149,99 @@ if __name__ == "__main__":
     N, d = M.shape
     M = M / (M.max() * np.sqrt(d))
 
-    n_queries = 2**2
-    n_memories = 2**2
     mask_after = int(d * args.mask_after_pct)
-    assert n_queries <= n_memories
+    assert args.n_queries <= args.n_memories
 
     rng = jr.PRNGKey(args.seed)
-    idxs = jr.choice(rng, jnp.arange(N,), (n_memories,), replace=False)
-    qs_og = jnp.array(M[idxs[:n_queries]])
+    diverse_example_idxs = [
+        # 68146, # (red sock, white background) # BAD
+        73606, # (teddy bear, black background)
+        83444, # (goose, dark ocean background)
+        69932, # (red car, gray background)
+        40404, # (open box, brown background)
+        94931, # (green acorn, green background)
+        92025, # (white chihuahua, small brown background)
+        131, # (goldfish, green background)
+        # 79596, # (white pillar, blue gradient background) # BAD
+        19459, # (monarch butterfly, light brown background)
+        20035, # (yellow butterfly, gray-blue background)
+        # 57149, # (black tux w/ saxophone, white-gray background)
+        8309, # (pink lobster, light blue  seabed)
+        6085, # (blue jellyfish, black background)
+        # 76695, # (black and white mesh) # BAD
+        87197, # (lemon, pink background)
+        62867, # (boxing sillhouette, orange background)
+        5964, # (gray koala)
+        # 40471, # (pink blue sock) # BAD
+        52936, # (pink car)
+        13076, # (Animal jupmping on grassy background)
+        # 4183, # (spider on purple background) # BAD
+        75649, # Archway
+        # 41631, # Gray keyboard
+        27488, # (Black red robe)
+        9546, # (Pair of penguins)
+        82380, # (Pie on table)
+    ]
+    if args.pick_imgs_randomly:
+        idxs = jr.choice(rng, jnp.arange(N), (args.n_memories,), replace=False)
+    else:
+        assert args.n_memories <= len(diverse_example_idxs)
+        idxs = diverse_example_idxs[:args.n_memories]
+
+    assert args.n_queries <= args.n_memories
+    qs_og = jnp.array(M[idxs[:args.n_queries]])
     qs_og_show = qs_og * jnp.sqrt(d)
     qs0 = qs_og.at[:, mask_after:].set(0)
     qs0_show = qs0 * jnp.sqrt(d)
     memories = M[idxs]
 
     # Get both trajectories
-    standard_trajectory, kernelized_trajectory = run_inference(qs0, memories, beta, Y, kernel="SinCosL2DAM", clamp=args.clamp, rerandomize_each_step=args.rerandomize_each_step, mask_after=mask_after, alpha=args.alpha, depth=args.depth)
+    standard_trajectory, kernelized_trajectory = run_inference(qs0, memories, args.beta, args.Y, kernel="SinCosL2DAM", clamp=args.clamp, rerandomize_each_step=args.rerandomize_each_step, mask_after=mask_after, alpha=args.alpha, depth=args.depth)
 
     # Col wise
-    cols = ['query', 'kernelized', 'standard', 'original']
-    img_arrays = np.array(rearrange([qs0_show, kernelized_trajectory['qsout'], standard_trajectory['qsout'], qs_og_show], "s n (h w c) -> s (n h) w c", h=64, w=64, c=3))
+    if args.show_ims_by == "col":
+        cols = ['query', 'kernelized', 'standard', 'original']
+        img_arrays = np.array(rearrange([qs0_show, kernelized_trajectory['qsout'], standard_trajectory['qsout'], qs_og_show], "s n (h w c) -> s (n h) w c", h=64, w=64, c=3))
 
-    for i, img in enumerate(img_arrays):
-        im = Image.fromarray((img * 255).astype(np.uint8))
+        for i, img in enumerate(img_arrays):
+            im = Image.fromarray((img * 255).astype(np.uint8))
+            if ju.is_interactive():
+                im.show()
+            im.save(figout_dir / f"img_{cols[i]}.png")
+
+        print(f"Figures saved to {figout_dir}")
+    elif args.show_ims_by == "row":
+        img_arrays = np.array(rearrange([qs0_show, kernelized_trajectory['qsout'], standard_trajectory['qsout'], qs_og_show], "s n (h w c) -> s h (n w) c", h=64, w=64, c=3))
+        big_img = rearrange(img_arrays[:-1], "s h w c -> (s h) w c")
+
         if ju.is_interactive():
-            im.show()
-        im.save(figout_dir / f"img_{cols[i]}.png")
+            fig, ax = plt.subplots(1,1, figsize=(8, 20))
+            ax.imshow(big_img)
+            ax.axis('off')
+        im = Image.fromarray((big_img * 255).astype(np.uint8))
+        im.save(figout_dir / f"PINF2.png")
+    else:
+        raise ValueError(f"show_ims_by must be 'col' or 'row', got {args.show_ims_by}")
+
+    #%% Save energies
+    if args.plot_energies:
+        dam_color = "#0AA551"
+        kdam_color = "#0E86F6"
+        colors = ["#DC330A", "#A7008F", "#7699CE", "#8F5C25"]
+        fig, ax = plt.subplots(figsize=(4.5,4))
+        standard_energies = np.stack(standard_trajectory['energies']).T
+        kernelized_energies = np.stack(kernelized_trajectory['energies']).T
+        Eto = args.Eto
+        for i in range(args.n_queries):
+            ax.plot(standard_energies[i][:Eto], c=dam_color, linestyle="--", label=f"Standard {i}", linewidth=2., alpha=0.4)
+            ax.plot(kernelized_energies[i][:Eto], c=kdam_color, linestyle="-", label=f"Kernelized {i}", linewidth=2, alpha=0.8)
+
+        standard_line = mlines.Line2D([0], [0], color=dam_color, linestyle="--", label='DAM Energies')
+        kernelized_line = mlines.Line2D([0], [0], color=kdam_color, linestyle="-", label='kDAM Energies', linewidth=2.)
+        ax.legend(handles=[kernelized_line, standard_line], fontsize=14)
+        ax.set_xticks([])
+
+        ax.tick_params(axis=u'x', which=u'both',length=0)
+
+        fig.show()
+        fig.savefig(figout_dir / "energies.png")

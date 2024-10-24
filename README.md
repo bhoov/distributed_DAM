@@ -9,7 +9,7 @@
   <figcaption>Figure 1: The Distributed Representation for Dense Associative Memory (DrDAM) approximates both the energy and fixed-point dynamics of the traditional Memory Representation for Dense Associative Memory (MrDAM) while having a parameter space of constant size.</figcaption>
 </figure>
 
-This repository contains the code for recreating all experiments of the main paper. All reported results were created on a single L40s GPU with ~48GB of VRAM.
+This repository contains the code for recreating all experiments of the main paper. Unless otherwise noted, all reported results were created on a single L40s GPU with ~48GB of VRAM.
 
 ## Installation
 ```bash
@@ -29,10 +29,12 @@ We follow a "shallow" directory structure that obviates the need for submodules 
 Recreate the trajectories shown in the right half of Fig 1 of our paper by running the following code:
 
 ```
-python exp_PINF.py
+python exp_PINF.py fig1
 ```
 
 - Runs on GPU 0 by default.
 - Output figures saved in `figs/FIG1`
 
 ### (Fig 2) "Pure INFerence on Tiny Imagenet: a compression scenario" [PINF2]
+
+(used an A100 with 80GB of VRAM for this experiment)
