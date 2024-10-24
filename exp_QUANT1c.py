@@ -89,7 +89,7 @@ class Args:
     # nqueries: int = 500
     # ms: tuple[int, ...] = (1_000, 40_000, 80_000, 200_000) # Number of basis functions to test
     betas: tuple[float, ...] = (10., 30., 40., 50.) # Which beta values to test. Use 'opt' if you want to test the optimal beta
-    device: str = "1" # Which device to use. Leave "" for cpu
+    device: str = "0" # Which device to use. Leave "" for cpu
     redo_existing_ckpts: bool = True # If true, re-run experiments for checkpoints that exist
     pct_near_occlude:float = 0.1 # Frac of bits to occlude in "near memories" exp.
 

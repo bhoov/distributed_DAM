@@ -22,7 +22,7 @@ make data # Download data. Takes ~10 min depending on internet speed
 
 ## Experiment Descriptions
 
-We follow a "shallow" directory structure that obviates the need for submodules and editable pip installations. Run all commands from the root directory.
+We follow a "shallow" directory structure that obviates the need for submodules and editable pip installations. Run all commands from the root directory. Unless otherwise mentioned, experiments default to running on GPU0.
 
 ### (Fig 1) "Pure INFerence on Tiny Imagenet" [PINF]
 
@@ -32,7 +32,6 @@ Recreate the trajectories shown in the right half of Fig 1 of our paper by runni
 python exp_PINF.py fig1
 ```
 
-- Runs on GPU 0 by default.
 - Output figures saved in `figs/PINF`
 
 ### (Fig 2) "Pure INFerence on Tiny Imagenet: compression" [PINF2]
@@ -43,7 +42,6 @@ python exp_PINF.py fig1
 python exp_PINF.py fig2
 ```
 
-- Runs on GPU 0 by default.
 - Output figure saved in `figs/PINF2`
 
 ### (Fig 3, Fig 4A) "QUANTitative experiments across `Y`" [QUANT1b]
@@ -54,7 +52,6 @@ python exp_PINF.py fig2
 python exp_QUANT1b_opt_retrieval.py --betas 10 30 40 50 --ms 5000 40000 80000 120000 160000 200000 300000 400000 500000 --outdir results/QUANT1b_near_0.1_retrieval --do_retrieval
 ```
 
-- Runs on GPU 1 by default
 - Saves data to `results/QUANT1b_near_0.1_retrieval`
 
 Once the data is generated, we analyze it for Figs 3 and 4A.
@@ -73,7 +70,6 @@ Once the data is generated, we analyze it for Figs 3 and 4A.
 python exp_QUAL1__qualitative_imgs.py
 ```
 
-- Runs on GPU 0 by default
 - Output figure saved in `figs/QUAL1`
 
 ### (Fig 5) "QUANTitative experiments across `K`" [QUANT1c]
@@ -83,8 +79,6 @@ python exp_QUAL1__qualitative_imgs.py
 ```
 python exp_QUANT1c.py
 ```
-
-- Runs on GPU 1 by default
 
 `python eval_QUANT1c.py` (Fig 5)
 
