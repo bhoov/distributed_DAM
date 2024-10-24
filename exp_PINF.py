@@ -32,7 +32,7 @@ class Args:
     n_queries: int = 4 # Number of queries
     n_memories: int = 4 # Number of memories
     seed: int = 42 # Random seed for selecting memories and random features
-    figout_dir: str = "figs/FIG1" # Where to save the output figures
+    figout_dir: str = "figs/PINF" # Where to save the output figures
     pick_imgs_randomly: bool = True # Whether to pick images randomly or from diverse_example_idxs
     plot_energies: bool = True # Whether to plot the energies
     Eto: int = 250 # Plot up to this many energy steps.
@@ -45,7 +45,7 @@ default_args = {
     ),
     "fig2": (
         "Make Figure 2",
-        Args(figout_dir="figs/FIG2", beta=60., Y=int(2e5), n_queries=20, n_memories=20, mask_after_pct=0.6, depth=1000, plot_energies=False, show_ims_by="row", pick_imgs_randomly=False),
+        Args(figout_dir="figs/PINF2", beta=60., Y=int(2e5), n_queries=20, n_memories=20, mask_after_pct=0.6, depth=1000, plot_energies=False, show_ims_by="row", pick_imgs_randomly=False),
     ),
 }
 
