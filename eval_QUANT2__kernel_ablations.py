@@ -14,8 +14,9 @@ os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"]=".9"
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"]="false"
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
+resultsdir = Path("results/QUANT2--data=letter/ckpts")
 # resultsdir = Path("results/QUANT2--data=letter_nobias/ckpts")
-resultsdir = Path("results/QUANT2-manybeta/ckpts")
+# resultsdir = Path("results/QUANT2-manybeta/ckpts")
 
 fnames = list(resultsdir.glob("*.pkl"))
 df = pd.concat([pd.read_pickle(f) for f in fnames])

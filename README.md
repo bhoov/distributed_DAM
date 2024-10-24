@@ -78,7 +78,7 @@ python exp_QUAL1__qualitative_imgs.py
 
 ### (Fig 5) "QUANTitative experiments across `K`" [QUANT1c]
 
-(experiment takes ~1 minute)
+(experiment takes ~2 minutes)
 
 ```
 python exp_QUANT1c.py
@@ -91,6 +91,8 @@ python exp_QUANT1c.py
 - Saves figures to `figs/QUANT1c`
 
 ### (Fig 6) "QUANTitative experiments on Kernel Ablations" [QUANT2]
+
+(experiment takes ~2 minutes)
 
 ```
 python exp_QUANT2__kernel_ablations.py

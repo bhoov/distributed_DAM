@@ -25,6 +25,7 @@ class Args:
     def get_device(self): return "" if self.device.lower() in ["", "cpu"] else self.device
 
 args = Args(ckpt_dir="results/QUANT1c/ckpts")
+
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"]="false"
 os.environ["CUDA_VISIBLE_DEVICES"]=args.get_device()
 
@@ -48,6 +49,8 @@ betas = [10., 30., 40., 50.]
 new_betas = list(sorted([b for b in betas if not (isinstance(b, str) or b == 1)], reverse=True))
 betas = new_betas
 
+
+df.head()
 #%%
 norm = Normalize(vmin=0., vmax=len(betas)-1+0.25)
 # norm = Normalize(vmin=-(len(betas)-1), vmax=0.25)
@@ -61,7 +64,9 @@ gradEfig, gradEaxs = plt.subplots(len(dims), len(gradEcols), figsize=(len(gradEc
 Eaxcol = 0
 gradEaxcol = 0
 nQ = df.iloc[0].q0.shape[0]
-balpha = 1.
+balpha = 1.0
+
+plot_fmt = 'o-'
 
 def get_color(_b):
     colors_big_to_small = [
@@ -95,39 +100,13 @@ def get_linewidth(_b):
     return widths_big_to_small[_b]
 
 def plot_beta_line(ax, xs, ys, errs, beta, _b):
-    ax.errorbar(xs, ys, yerr=errs, label=f"beta={beta}", fmt="o", color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), mec=get_dot_color(_b), mfc=get_dot_color(_b), elinewidth=1.75)
-    ax.plot(xs, ys, color=get_color(_b), linestyle='-', alpha=0.25, linewidth=get_linewidth(_b))
-
+    ax.errorbar(xs, ys, yerr=errs, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), mec=get_dot_color(_b), mfc=get_dot_color(_b), elinewidth=1.75)
 
 # Compute random guess expectations
 df['Eguess_abserr_mean'] = df['Eguess_abserr'].apply(lambda x: jnp.mean(x))
 Erandom_guess = df.groupby("beta")['Eguess_abserr_mean'].mean().max()
 df['gradEguess_abserr_mean'] = df['gradEguess_abserr'].apply(lambda x: jnp.mean(x))
 gradErandom_guess = df.groupby("beta")['gradEguess_abserr_mean'].mean().max()
-
-df['E0_mae'] = df['E0_abserr']
-df['Enear_mae'] = df['Enear_abserr']
-df['Emem_mae'] = df['Emem_abserr']
-df['Eguess_mae'] = df['Eguess_abserr']
-
-# jnp.sqrt(jnp.sum((x - y)**2, axis=-1))
-mae_fn = lambda delta: jnp.sqrt(jnp.sum(delta**2, axis=-1))
-df['gradE0_mae'] = (df['gradE0'] - df['gradE0_kernel']).apply(mae_fn)
-df['gradEnear_mae'] = (df['gradEnear'] - df['gradEnear_kernel']).apply(mae_fn)
-df['gradEmem_mae'] = (df['gradEmem'] - df['gradEmem_kernel']).apply(mae_fn)
-df['gradEguess_mae'] = (df['gradEguess'] - df['gradEmem']).apply(mae_fn)
-
-df['Eguess_mae_mean'] = df['Eguess_mae'].apply(lambda x: jnp.mean(x))
-Erandom_guess = df.groupby("beta")['Eguess_mae_mean'].mean().max()
-df['gradEguess_mae_mean'] = df['gradEguess_mae'].apply(lambda x: jnp.mean(x))
-gradErandom_guess = df.groupby("beta")['gradEguess_mae_mean'].mean().max()
-
-
-df.groupby("beta")['Eguess_mae_mean'].mean().max()
-
-df.groupby("beta")['gradEguess_mae_mean'].mean()
-gradErandom_guess
-Erandom_guess
 
 def plot_rand_line(ax, kind):
     if kind == "E":
@@ -143,22 +122,21 @@ for _d, d in enumerate(dims):
 
     dfdb_all = dfd[dfd['beta'].isin(set(betas))]
     normalized_Es = [
-        dfdb_all['E0_mae'].apply(lambda x: jnp.mean(x)), 
-        dfdb_all['Enear_mae'].apply(lambda x: jnp.mean(x)), 
-        dfdb_all['Emem_mae'].apply(lambda x: jnp.mean(x)),
-        np.array([Erandom_guess])
+        dfdb_all['E0_abserr'].apply(lambda x: jnp.mean(x)), 
+        dfdb_all['Enear_abserr'].apply(lambda x: jnp.mean(x)), 
+        dfdb_all['Emem_abserr'].apply(lambda x: jnp.mean(x))
     ]
     Erange_max = max([E.max() for E in normalized_Es])
-    Erange_max = Erange_max + 0.1 * Erange_max + 1.
+    Erange_max = Erange_max + 0.1 * Erange_max
     Erange_min = min([E.min() for E in normalized_Es])
     Erange_min = Erange_min / 2
     Erange = [Erange_min, Erange_max]
-    # Erange = [Erange_min, Erandom_guess + 0.1]
+    Erange = [Erange_min, Erandom_guess + 0.1]
+
     normalized_gradEs = [
-        dfdb_all['gradE0_mae'].apply(lambda x: jnp.mean(x)), 
-        dfdb_all['gradEnear_mae'].apply(lambda x: jnp.mean(x)), 
-        dfdb_all['gradEmem_mae'].apply(lambda x: jnp.mean(x)),
-        np.array([gradErandom_guess])
+        dfdb_all['gradE0_abserr'].apply(lambda x: jnp.mean(x)), 
+        dfdb_all['gradEnear_abserr'].apply(lambda x: jnp.mean(x)), 
+        dfdb_all['gradEmem_abserr'].apply(lambda x: jnp.mean(x))
     ]
     gradErange_max = max([gradE.max() for gradE in normalized_gradEs]) * 2
     # gradErange_max = gradErange_max + 0.7 * gradErange_max
@@ -173,8 +151,8 @@ for _d, d in enumerate(dims):
         dfdb = dfd[dfd["beta"] == beta].sort_values(by="k")
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
-        Emem_mean = np.array(dfdb['Emem_mae'].apply(lambda x: jnp.mean(x)))
-        Emem_std = np.array(dfdb['Emem_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        Emem_mean = np.array(dfdb['Emem_abserr'].apply(lambda x: jnp.mean(x)))
+        Emem_std = np.array(dfdb['Emem_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
         plot_beta_line(ax, know, Emem_mean, Emem_std, beta, _b)
 
@@ -203,9 +181,10 @@ for _d, d in enumerate(dims):
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
 
-        Enear_mean = np.array(dfdb['Enear_mae'].apply(lambda x: jnp.mean(x)))
-        Enear_std = np.array(dfdb['Enear_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        Enear_mean = np.array(dfdb['Enear_abserr'].apply(lambda x: jnp.mean(x)))
+        Enear_std = np.array(dfdb['Enear_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
+        # ax.errorbar(mnow, Enear_mean, yerr=Enear_std, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), elinewidth=1.5)
         plot_beta_line(ax, know, Enear_mean, Enear_std, beta, _b)
 
     if _d == 0:
@@ -233,9 +212,10 @@ for _d, d in enumerate(dims):
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
 
-        E0_mean = np.array(dfdb['E0_mae'].apply(lambda x: jnp.mean(x)))
-        E0_std = np.array(dfdb['E0_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        E0_mean = np.array(dfdb['E0_abserr'].apply(lambda x: jnp.mean(x)))
+        E0_std = np.array(dfdb['E0_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
+        # ax.errorbar(mnow, E0_mean, yerr=E0_std, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), elinewidth=1.5)
         plot_beta_line(ax, know, E0_mean, E0_std, beta, _b)
 
     if _d == 0:
@@ -261,15 +241,16 @@ for _d, d in enumerate(dims):
         dfdb = dfd[dfd["beta"] == beta].sort_values(by="k")
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
-        gradEmem_mean = np.array(dfdb['gradEmem_mae'].apply(lambda x: jnp.mean(x)))
-        gradEmem_std = np.array(dfdb['gradEmem_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        gradEmem_mean = np.array(dfdb['gradEmem_abserr'].apply(lambda x: jnp.mean(x)))
+        gradEmem_std = np.array(dfdb['gradEmem_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
+        # ax.errorbar(mnow, gradEmem_mean, yerr=gradEmem_std, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), elinewidth=1.5)
         plot_beta_line(ax, know, gradEmem_mean, gradEmem_std, beta, _b)
 
         # if _b == (len(betas) - 1):
-        #     # N = len(dfdb['Eguess_mae'])
-        #     gradEguess_mean = np.array(dfdb['gradEguess_mae'].apply(lambda x: jnp.mean(x)))
-        #     gradEguess_std = np.array(dfdb['gradEguess_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(x.shape[0])))
+        #     # N = len(dfdb['Eguess_abserr'])
+        #     gradEguess_mean = np.array(dfdb['gradEguess_abserr'].apply(lambda x: jnp.mean(x)))
+        #     gradEguess_std = np.array(dfdb['gradEguess_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(x.shape[0])))
         #     ax.errorbar(mnow, gradEguess_mean, yerr=gradEguess_std, fmt='x:', color='red', alpha=1.)
 
     # print("gradEmem_mean", gradEmem_mean)
@@ -297,9 +278,10 @@ for _d, d in enumerate(dims):
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
 
-        gradEnear_mean = np.array(dfdb['gradEnear_mae'].apply(lambda x: jnp.mean(x)))
-        gradEnear_std = np.array(dfdb['gradEnear_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        gradEnear_mean = np.array(dfdb['gradEnear_abserr'].apply(lambda x: jnp.mean(x)))
+        gradEnear_std = np.array(dfdb['gradEnear_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
+        # ax.errorbar(mnow, gradEnear_mean, yerr=gradEnear_std, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), elinewidth=1.5)
         plot_beta_line(ax, know, gradEnear_mean, gradEnear_std, beta, _b)
 
     if _d == 0:
@@ -325,9 +307,10 @@ for _d, d in enumerate(dims):
         dfdb = dfd[dfd["beta"] == beta].sort_values(by="k")
         dfdb = dfdb[dfdb["k"].isin(Ks)]
         know = dfdb['k']
-        gradE0_mean = np.array(dfdb['gradE0_mae'].apply(lambda x: jnp.mean(x)))
-        gradE0_std = np.array(dfdb['gradE0_mae'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
+        gradE0_mean = np.array(dfdb['gradE0_abserr'].apply(lambda x: jnp.mean(x)))
+        gradE0_std = np.array(dfdb['gradE0_abserr'].apply(lambda x: jnp.std(x) / jnp.sqrt(nQ)))
 
+        # ax.errorbar(mnow, gradE0_mean, yerr=gradE0_std, label=f"beta={beta}", fmt=plot_fmt, color=get_color(_b), alpha=balpha, linewidth=get_linewidth(_b), elinewidth=1.5)
         plot_beta_line(ax, know, gradE0_mean, gradE0_std, beta, _b)
 
     if _d == 0:

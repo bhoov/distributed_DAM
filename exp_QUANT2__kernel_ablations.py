@@ -58,7 +58,7 @@ class Args:
     data: DataOpts = DataOpts.letter # Which dataset to evaluate on
     kernels: Tuple[str] = ("CosL2DAM", "ExpL2DAM", "ExpExpL2DAM", "SinCosL2DAM") # Which kernel to use, specified by the KernelOpts registry. Ignore "nolog" vs "log", both are tested
     seed: int = 42 # Random seed for all experiments
-    add_bias: bool = False # If true, add b ~ U(0,2pi) to the basis function's argument
+    add_bias: bool = True # If true, add b ~ U(0,2pi) to the basis function's argument
     orthogonal_init: bool = False # If true, initialize random features from orthogonal gaussian
     device: str = "" # Which device to use. CPU by default, or int to specify which CUDA device
     betas: Tuple[Union[float, str]] = (1., 5., 10., 20., 30., 40., 50., 60., 100., 200., 600.) # Specify the beta values to use. Can be a float, or "opt" to indicate using the optimal beta
