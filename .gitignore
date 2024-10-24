@@ -1,5 +1,6 @@
 __pycache__
-data/
-figs/
-results/
+data/*
+figs/*
+results/*
 *.pyc
+!data/.gitkeep
