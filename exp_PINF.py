@@ -45,7 +45,7 @@ default_args = {
     ),
     "fig2": (
         "Make Figure 2",
-        Args(figout_dir="figs/FIG2", beta=60., Y=int(2e5), n_queries=20, n_memories=20, mask_after_pct=0.6, plot_energies=False, show_ims_by="row", pick_imgs_randomly=False),
+        Args(figout_dir="figs/FIG2", beta=60., Y=int(2e5), n_queries=20, n_memories=20, mask_after_pct=0.6, depth=1000, plot_energies=False, show_ims_by="row", pick_imgs_randomly=False),
     ),
 }
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         5964, # (gray koala)
         # 40471, # (pink blue sock) # BAD
         52936, # (pink car)
-        13076, # (Animal jupmping on grassy background)
+        13076, # (Animal jumping on grassy background)
         # 4183, # (spider on purple background) # BAD
         75649, # Archway
         # 41631, # Gray keyboard

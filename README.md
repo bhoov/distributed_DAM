@@ -35,6 +35,13 @@ python exp_PINF.py fig1
 - Runs on GPU 0 by default.
 - Output figures saved in `figs/FIG1`
 
-### (Fig 2) "Pure INFerence on Tiny Imagenet: a compression scenario" [PINF2]
+### (Fig 2) "Pure INFerence on Tiny Imagenet: compression" [PINF2]
 
 (used an A100 with 80GB of VRAM for this experiment)
+
+```
+python exp_PINF.py fig2
+```
+
+- Runs on GPU 0 by default.
+- Output figure saved in `figs/FIG2`
