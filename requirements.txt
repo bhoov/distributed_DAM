@@ -1,0 +1,16 @@
+jax
+jaxlib
+jaxtyping
+matplotlib
+equinox
+optax
+einops
+tyro
+tqdm
+numpy<2.0
+datasets
+pandas
+scipy
+fastcore
+tabulate
+polars
